@@ -13,44 +13,44 @@ var ctx = context.Background()
 func main() {
 	app := fiber.New()
 
-	// 1. Kết nối Redis (Dùng URL ông đưa)
-	// Lưu ý: Nếu có mật khẩu, hãy điền vào, nếu không để trống ""
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "shortline.proxy.rlwy.net:39547",
-		Password: "", // Điền password nếu Railway yêu cầu
-		DB:       0,  // DB mặc định
+	
+		Addr:     "redis.railway.internal:6379", 
+		Password: "dlhxpPzrdgBcLDsxqGzEhozdZEMlytiL", 
+		DB:       0,
 	})
 
-	// Route mặc định (Root)
+	// 1. Root path trả về message luôn như ông muốn
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "UP", "redis": "connected"})
+		return c.Status(200).JSON(fiber.Map{
+			"status":  "UP",
+			"message": "tao là bố của chúng mày",
+		})
 	})
 
-	// 2. Chức năng ADD KEY (Method POST)
-	// Body mẫu: {"key": "name", "value": "Viet"}
 	app.Post("/set", func(c *fiber.Ctx) error {
 		data := make(map[string]string)
 		if err := c.BodyParser(&data); err != nil {
-			return c.Status(400).JSON(fiber.Map{"error": "Lỗi parse JSON"})
+			return c.Status(400).JSON(fiber.Map{"error": "JSON không hợp lệ"})
 		}
 
 		err := rdb.Set(ctx, data["key"], data["value"], 0).Err()
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			return c.Status(500).JSON(fiber.Map{"error": "Lỗi lưu Redis: " + err.Error()})
 		}
 
-		return c.JSON(fiber.Map{"message": "Đã lưu thành công!"})
+		return c.JSON(fiber.Map{"message": "Đã lưu " + data["key"] + " thành công!"})
 	})
 
-	// 3. Chức năng READ KEY (Method GET)
-	// URL mẫu: /get/name
+	
 	app.Get("/get/:key", func(c *fiber.Ctx) error {
 		key := c.Params("key")
 		val, err := rdb.Get(ctx, key).Result()
 		if err == redis.Nil {
-			return c.Status(404).JSON(fiber.Map{"error": "Không tìm thấy key"})
+			return c.Status(404).JSON(fiber.Map{"error": "Key không tồn tại"})
 		} else if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			return c.Status(500).JSON(fiber.Map{"error": "Lỗi đọc Redis"})
 		}
 
 		return c.JSON(fiber.Map{"key": key, "value": val})
@@ -60,5 +60,6 @@ func main() {
 	if port == "" {
 		port = "3000"
 	}
+
 	app.Listen("0.0.0.0:" + port)
 }
