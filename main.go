@@ -1,27 +1,29 @@
 package main
 
 import (
-	"net/http"
 	"os"
-	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-    app := fiber.New()
+	// Khởi tạo app Fiber
+	app := fiber.New()
 
-    app.Get("/health", func(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{
-            "status": "UP",
-        })
-    })
+	// Route healthcheck
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.Status(200).JSON(fiber.Map{
+			"status": "UP",
+			"message": "tao là bố của chúng mày",
+		})
+	})
 
-   
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "3000" // Default port
-    }
+	// Lấy PORT từ biến môi trường của Railway
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000" // Mặc định chạy port 3000 nếu ở local
+	}
 
-    app.Listen("0.0.0.0:" + port)
+	// QUAN TRỌNG: Phải lắng nghe trên 0.0.0.0 để Railway nhận được traffic
+	app.Listen("0.0.0.0:" + port)
 }
