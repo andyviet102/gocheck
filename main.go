@@ -14,14 +14,14 @@ func main() {
 	app := fiber.New()
 
 
+
 	rdb := redis.NewClient(&redis.Options{
-	
 		Addr:     "redis.railway.internal:6379", 
-		Password: "dlhxpPzrdgBcLDsxqGzEhozdZEMlytiL", 
+		Username: "default",                        
+		Password: "dlhxpPzrdgBcLDsxqGzEhozdzEMlytiL", 
 		DB:       0,
 	})
-
-	// 1. Root path trả về message luôn như ông muốn
+	
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(200).JSON(fiber.Map{
 			"status":  "UP",
