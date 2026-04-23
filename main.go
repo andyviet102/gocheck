@@ -9,21 +9,19 @@ import (
 )
 
 func main() {
-	r := gin.Default()
+    app := fiber.New()
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":    "UP",
-			"timestamp": time.Now().Format(time.RFC3339),
-			"env":       "railway",
-		})
-	})
+    app.Get("/health", func(c *fiber.Ctx) error {
+        return c.JSON(fiber.Map{
+            "status": "UP",
+        })
+    })
 
-	// Lấy PORT từ environment variable của Railway, mặc định là 8080 nếu chạy local
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+   
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "3000" // Default port
+    }
 
-	r.Run(":" + port)
+    app.Listen("0.0.0.0:" + port)
 }
